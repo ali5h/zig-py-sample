@@ -1,23 +1,27 @@
 const std = @import("std");
 
+const pkgs = struct {
+    const python = std.build.Pkg{
+        .name = "python3.8",
+        .path = .{ .path = "./src/python3.8.zig" },
+    };
+};
+
 pub fn build(b: *std.build.Builder) void {
     const mode = b.standardReleaseOptions();
 
-    const lib = b.addSharedLibrary("sum", "src/main.zig", .unversioned);
+    const lib = b.addSharedLibrary("sum", "src/pysum.zig", .unversioned);
     lib.setBuildMode(mode);
-
-    // from python3-config
-    lib.addIncludeDir("/usr/include/");
-    lib.addIncludeDir("/usr/include/python3.8");
-    lib.addIncludeDir("/usr/include/x86_64-linux-gnu/");
-    lib.addLibPath("/usr/lib");
-    lib.addLibPath("/usr/lib/python3.8/config-3.8-x86_64-linux-gnu");
-    lib.linkSystemLibrary("crypt");
-    lib.linkSystemLibrary("pthread");
-    lib.linkSystemLibrary("m");
-    lib.linkSystemLibrary("dl");
-    lib.linkSystemLibrary("util");
+    lib.addPackage(pkgs.python);
+    lib.linkLibC();
     lib.install();
+
+    const exe = b.addExecutable("callpy", "src/callpy.zig");
+    exe.addPackage(pkgs.python);
+    exe.addIncludeDir("/usr/include/python3.8");
+    exe.linkSystemLibrary("python3.8");
+    exe.linkLibC();
+    exe.install();
 
     const main_tests = b.addTest("src/sum.zig");
     main_tests.setBuildMode(mode);

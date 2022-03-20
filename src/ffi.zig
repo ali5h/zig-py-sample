@@ -1,7 +1,4 @@
-pub const py = @cImport({
-    @cDefine("PY_SSIZE_T_CLEAN", "1");
-    @cInclude("Python.h");
-});
+pub const py = @import("python3.8");
 
 pub const PyObject = py.PyObject;
 
